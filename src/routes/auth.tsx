@@ -86,7 +86,7 @@ function AuthPage() {
     setBusy(true);
 
     try {
-      // 1. Create user and record login in Local File-Based DB (data/db.json)
+      // Create user in Local File Database (data/db.json)
       const result = await localSignUp({
         data: {
           email: parsedEmail.data,
@@ -99,11 +99,10 @@ function AuthPage() {
       setBusy(false);
       toast.success("Account created successfully!");
       window.location.href = "/home";
-    } catch {
-      loginAsDemoUser(fullName.trim(), parsedEmail.data);
+    } catch (err: any) {
       setBusy(false);
-      toast.success("Account created successfully!");
-      window.location.href = "/home";
+      const message = err?.message || "An account with this email already exists.";
+      toast.error(message);
     }
   }
 
