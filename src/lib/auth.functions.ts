@@ -130,28 +130,3 @@ export const getLoginLogsFn = createServerFn({ method: "GET" }).handler(async ()
   const db = ensureLocalDb();
   return db.login_logs.slice(-50).reverse();
 });
-
-const ResetInput = z.object({
-  email: z.string().trim().email(),
-  newPassword: z.string().min(6).optional(),
-});
-
-export const localResetPasswordFn = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => ResetInput.parse(input))
-  .handler(async ({ data }) => {
-    const db = ensureLocalDb();
-    const userIndex = db.users.findIndex((u) => u.email.toLowerCase() === data.email.toLowerCase());
-
-    if (userIndex === -1) {
-      throw new Error("No account found with this email address.");
-    }
-
-    if (data.newPassword) {
-      db.users[userIndex].password_hash = simpleHash(data.newPassword);
-      saveLocalDb(db);
-      return { success: true, message: "Password updated successfully." };
-    }
-
-    return { success: true, userEmail: db.users[userIndex].email };
-  });
-

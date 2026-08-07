@@ -37,7 +37,6 @@ function AuthPage() {
 
   const localSignIn = useServerFn(localSignInFn);
   const localSignUp = useServerFn(localSignUpFn);
-  const localResetPassword = useServerFn(localResetPasswordFn);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -151,16 +150,17 @@ function AuthPage() {
     const parsed = emailSchema.safeParse(resetEmail);
     if (!parsed.success) return toast.error(parsed.error.issues[0].message);
     setBusy(true);
-
     try {
-      // 1. Verify account in Local File DB (data/db.json)
-      const res = await localResetPassword({ data: { email: parsed.data } });
+      const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
       setBusy(false);
-      toast.success("Account verified! Set your new password.");
-      window.location.href = `/reset-password?email=${encodeURIComponent(res?.userEmail || parsed.data)}`;
-    } catch (err: any) {
+      if (error) return toast.error(error.message);
+      toast.success("Password reset link sent. Check your email.");
+      setMode("login");
+    } catch {
       setBusy(false);
-      toast.error(err?.message || "No account found with this email address.");
+      toast.error("Could not reach auth server.");
     }
   }
 
