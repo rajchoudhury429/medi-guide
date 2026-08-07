@@ -63,15 +63,32 @@ export function ensureLocalDb(): DatabaseSchema {
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
+
     if (!fs.existsSync(DB_FILE)) {
       fs.writeFileSync(DB_FILE, JSON.stringify(INITIAL_DB, null, 2), "utf-8");
-      return INITIAL_DB;
+      return { ...INITIAL_DB };
     }
-    const content = fs.readFileSync(DB_FILE, "utf-8");
-    return JSON.parse(content) as DatabaseSchema;
+
+    const content = fs.readFileSync(DB_FILE, "utf-8").trim();
+    if (!content) {
+      return { ...INITIAL_DB };
+    }
+
+    const parsed = JSON.parse(content) as Partial<DatabaseSchema>;
+    return {
+      users: Array.isArray(parsed.users) ? parsed.users : [],
+      sessions: Array.isArray(parsed.sessions) ? parsed.sessions : [],
+      login_logs: Array.isArray(parsed.login_logs) ? parsed.login_logs : [],
+      profiles: Array.isArray(parsed.profiles) ? parsed.profiles : [],
+      symptom_checks: Array.isArray(parsed.symptom_checks) ? parsed.symptom_checks : [],
+      appointments: Array.isArray(parsed.appointments) ? parsed.appointments : [],
+      reminders: Array.isArray(parsed.reminders) ? parsed.reminders : [],
+      records: Array.isArray(parsed.records) ? parsed.records : [],
+      emergency_contacts: Array.isArray(parsed.emergency_contacts) ? parsed.emergency_contacts : [],
+    };
   } catch (err) {
     console.error("Local DB read error:", err);
-    return INITIAL_DB;
+    return { ...INITIAL_DB };
   }
 }
 
@@ -80,7 +97,11 @@ export function saveLocalDb(db: DatabaseSchema): void {
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
-    fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2), "utf-8");
+
+    // Write atomically via temporary file to prevent partial write corruption
+    const tempFile = path.resolve(DATA_DIR, "db.json.tmp");
+    fs.writeFileSync(tempFile, JSON.stringify(db, null, 2), "utf-8");
+    fs.renameSync(tempFile, DB_FILE);
   } catch (err) {
     console.error("Local DB save error:", err);
   }
