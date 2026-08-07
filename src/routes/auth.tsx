@@ -60,7 +60,7 @@ function AuthPage() {
     setBusy(true);
 
     try {
-      // 1. Save and verify login in Local File-Based DB (data/db.json)
+      // Verify login against Local File Database (data/db.json)
       const result = await localSignIn({ data: { email: parsedEmail.data, password } });
       const name = result?.user?.user_metadata?.full_name || "User";
       const userEmail = result?.user?.email || parsedEmail.data;
@@ -68,13 +68,10 @@ function AuthPage() {
       setBusy(false);
       toast.success(`Welcome back, ${name}!`);
       window.location.href = "/home";
-    } catch {
-      // Direct local authentication fallback
-      const displayName = parsedEmail.data.split("@")[0] || "User";
-      loginAsDemoUser(displayName, parsedEmail.data);
+    } catch (err: any) {
       setBusy(false);
-      toast.success(`Welcome back, ${displayName}!`);
-      window.location.href = "/home";
+      const message = err?.message || "Invalid email or password.";
+      toast.error(message);
     }
   }
 
