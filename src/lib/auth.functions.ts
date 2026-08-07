@@ -130,3 +130,42 @@ export const getLoginLogsFn = createServerFn({ method: "GET" }).handler(async ()
   const db = ensureLocalDb();
   return db.login_logs.slice(-50).reverse();
 });
+
+const ResetInput = z.object({
+  email: z.string().trim().email(),
+  newPassword: z.string().min(6).optional(),
+});
+
+export const localResetPasswordFn = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => ResetInput.parse(input))
+  .handler(async ({ data }) => {
+    const db = ensureLocalDb();
+    let userIndex = db.users.findIndex((u) => u.email.toLowerCase() === data.email.toLowerCase());
+
+    if (userIndex === -1) {
+      const userId = `user_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      const newUser: LocalUser = {
+        id: userId,
+        email: data.email.toLowerCase(),
+        password_hash: simpleHash(data.newPassword || "123456"),
+        full_name: data.email.split("@")[0] || "User",
+        created_at: new Date().toISOString(),
+      };
+      db.users.push(newUser);
+      userIndex = db.users.length - 1;
+    } else if (data.newPassword) {
+      db.users[userIndex].password_hash = simpleHash(data.newPassword);
+    }
+
+    saveLocalDb(db);
+    const targetUser = db.users[userIndex];
+    return {
+      success: true,
+      user: {
+        id: targetUser.id,
+        email: targetUser.email,
+        user_metadata: { full_name: targetUser.full_name },
+      },
+    };
+  });
+

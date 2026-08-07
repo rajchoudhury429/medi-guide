@@ -7,7 +7,7 @@ import { Loader2, Mail, Lock, User as UserIcon, HeartPulse, PlayCircle, HardDriv
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useSession, loginAsDemoUser } from "@/lib/use-session";
-import { localSignInFn, localSignUpFn } from "@/lib/auth.functions";
+import { localSignInFn, localSignUpFn, localResetPasswordFn } from "@/lib/auth.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,6 +37,7 @@ function AuthPage() {
 
   const localSignIn = useServerFn(localSignInFn);
   const localSignUp = useServerFn(localSignUpFn);
+  const localResetPassword = useServerFn(localResetPasswordFn);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -101,8 +102,14 @@ function AuthPage() {
       window.location.href = "/home";
     } catch (err: any) {
       setBusy(false);
-      const message = err?.message || "An account with this email already exists.";
-      toast.error(message);
+      const message = err?.message || "";
+      if (message.includes("already exists")) {
+        toast.info("An account with this email already exists. Switching to Reset Password...");
+        setResetEmail(parsedEmail.data);
+        setMode("forgot");
+      } else {
+        toast.error(message || "Could not create account.");
+      }
     }
   }
 
@@ -150,17 +157,16 @@ function AuthPage() {
     const parsed = emailSchema.safeParse(resetEmail);
     if (!parsed.success) return toast.error(parsed.error.issues[0].message);
     setBusy(true);
+
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
+      // Verify account in Local File DB (data/db.json)
+      const res = await localResetPassword({ data: { email: parsed.data } });
       setBusy(false);
-      if (error) return toast.error(error.message);
-      toast.success("Password reset link sent. Check your email.");
-      setMode("login");
-    } catch {
+      toast.success("Account verified! Redirecting to set your new password...");
+      window.location.href = `/reset-password?email=${encodeURIComponent(res?.user?.email || parsed.data)}`;
+    } catch (err: any) {
       setBusy(false);
-      toast.error("Could not reach auth server.");
+      toast.error(err?.message || "No account found with this email address.");
     }
   }
 
