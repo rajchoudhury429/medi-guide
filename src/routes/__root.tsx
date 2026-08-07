@@ -14,6 +14,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { LanguageProvider } from "@/lib/i18n";
 import { getStoredTheme, applyTheme } from "@/lib/theme";
+import { HeartPulse } from "lucide-react";
 
 function NotFoundComponent() {
   return (
