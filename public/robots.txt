@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /home
+Disallow: /ai
+Disallow: /appointments
+Disallow: /reminders
+Disallow: /records
+Disallow: /sos
+Disallow: /profile
