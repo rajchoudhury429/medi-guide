@@ -3,6 +3,12 @@
   publish = "dist"
   functions = ".netlify/functions-internal/server"
 
+[functions]
+  external_node_modules = ["tslib"]
+
+[[plugins]]
+  package = "@netlify/plugin-functions-install-core"
+
 [dev]
   command = "npm run dev"
   port = 3000
