@@ -1,8 +1,28 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const DATA_DIR = path.resolve(process.cwd(), "data");
-const DB_FILE = path.resolve(DATA_DIR, "db.json");
+function getDbPath(): string {
+  try {
+    const dir = path.resolve(process.cwd(), "data");
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    const testFile = path.resolve(dir, ".perm-test");
+    fs.writeFileSync(testFile, "ok");
+    fs.unlinkSync(testFile);
+    return path.resolve(dir, "db.json");
+  } catch {
+    // In serverless environments (Netlify functions, AWS Lambda), process.cwd() is read-only
+    const tmpBase = process.env.TEMP || process.env.TMP || "/tmp";
+    const tmpDir = path.resolve(tmpBase, "mediguide-data");
+    if (!fs.existsSync(tmpDir)) {
+      try {
+        fs.mkdirSync(tmpDir, { recursive: true });
+      } catch {}
+    }
+    return path.resolve(tmpDir, "db.json");
+  }
+}
 
 export interface LocalUser {
   id: string;
@@ -60,16 +80,18 @@ const INITIAL_DB: DatabaseSchema = {
 
 export function ensureLocalDb(): DatabaseSchema {
   try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
+    const dbFile = getDbPath();
+    const dataDir = path.dirname(dbFile);
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
     }
 
-    if (!fs.existsSync(DB_FILE)) {
-      fs.writeFileSync(DB_FILE, JSON.stringify(INITIAL_DB, null, 2), "utf-8");
+    if (!fs.existsSync(dbFile)) {
+      fs.writeFileSync(dbFile, JSON.stringify(INITIAL_DB, null, 2), "utf-8");
       return { ...INITIAL_DB };
     }
 
-    const content = fs.readFileSync(DB_FILE, "utf-8").trim();
+    const content = fs.readFileSync(dbFile, "utf-8").trim();
     if (!content) {
       return { ...INITIAL_DB };
     }
@@ -94,14 +116,16 @@ export function ensureLocalDb(): DatabaseSchema {
 
 export function saveLocalDb(db: DatabaseSchema): void {
   try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
+    const dbFile = getDbPath();
+    const dataDir = path.dirname(dbFile);
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
     }
 
     // Write atomically via temporary file to prevent partial write corruption
-    const tempFile = path.resolve(DATA_DIR, "db.json.tmp");
+    const tempFile = `${dbFile}.tmp`;
     fs.writeFileSync(tempFile, JSON.stringify(db, null, 2), "utf-8");
-    fs.renameSync(tempFile, DB_FILE);
+    fs.renameSync(tempFile, dbFile);
   } catch (err) {
     console.error("Local DB save error:", err);
   }

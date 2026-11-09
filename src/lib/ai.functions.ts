@@ -46,32 +46,76 @@ Rules:
 - Never give personalized prescriptions or state absolute diagnostic certainty.`;
 
 function getGroqConfig(): { apiKey: string; preferredModel: string } {
-  // Check process.env first
-  let key = (process.env.GROQ_API_KEY || "").trim();
-  let model = (process.env.GROQ_MODEL || "").trim();
+  // Check process.env and runtime environments first
+  let key = (
+    process.env.GROQ_API_KEY ||
+    process.env.NITRO_GROQ_API_KEY ||
+    process.env.VITE_GROQ_API_KEY ||
+    (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_GROQ_API_KEY) ||
+    ""
+  ).trim();
 
-  // Fallback: read directly from .env file in process.cwd()
-  try {
-    const envPath = path.resolve(process.cwd(), ".env");
-    if (fs.existsSync(envPath)) {
-      const content = fs.readFileSync(envPath, "utf-8");
-      const lines = content.split("\n");
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if ((!key || key.includes("placeholder")) && trimmed.startsWith("GROQ_API_KEY=")) {
-          key = trimmed.replace("GROQ_API_KEY=", "").trim().replace(/^["']|["']$/g, "");
-        }
-        if (!model && trimmed.startsWith("GROQ_MODEL=")) {
-          model = trimmed.replace("GROQ_MODEL=", "").trim().replace(/^["']|["']$/g, "");
+  let model = (
+    process.env.GROQ_MODEL ||
+    process.env.NITRO_GROQ_MODEL ||
+    process.env.VITE_GROQ_MODEL ||
+    (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_GROQ_MODEL) ||
+    ""
+  ).trim();
+
+  // Fallback: search .env / .env.local in candidate directory paths
+  if (!key || key.includes("placeholder")) {
+    const candidateEnvFiles = [".env", ".env.local", ".env.production"];
+    const candidateDirs = [
+      process.cwd(),
+      path.resolve(process.cwd(), ".."),
+      path.resolve(process.cwd(), "../.."),
+    ];
+
+    for (const dir of candidateDirs) {
+      for (const file of candidateEnvFiles) {
+        try {
+          const envPath = path.resolve(dir, file);
+          if (fs.existsSync(envPath)) {
+            const content = fs.readFileSync(envPath, "utf-8");
+            const lines = content.split(/\r?\n/);
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (
+                (!key || key.includes("placeholder")) &&
+                (trimmed.startsWith("GROQ_API_KEY=") ||
+                  trimmed.startsWith("NITRO_GROQ_API_KEY=") ||
+                  trimmed.startsWith("VITE_GROQ_API_KEY="))
+              ) {
+                key = trimmed
+                  .replace(/^(GROQ_API_KEY|NITRO_GROQ_API_KEY|VITE_GROQ_API_KEY)=/, "")
+                  .trim()
+                  .replace(/^["']|["']$/g, "");
+              }
+              if (
+                !model &&
+                (trimmed.startsWith("GROQ_MODEL=") ||
+                  trimmed.startsWith("NITRO_GROQ_MODEL=") ||
+                  trimmed.startsWith("VITE_GROQ_MODEL="))
+              ) {
+                model = trimmed
+                  .replace(/^(GROQ_MODEL|NITRO_GROQ_MODEL|VITE_GROQ_MODEL)=/, "")
+                  .trim()
+                  .replace(/^["']|["']$/g, "");
+              }
+            }
+            if (key && !key.includes("placeholder")) break;
+          }
+        } catch {
+          // continue searching
         }
       }
+      if (key && !key.includes("placeholder")) break;
     }
-  } catch (err) {
-    console.error("Failed to read .env file for Groq config:", err);
   }
 
   return {
-    apiKey: key && !key.includes("placeholder") ? key : "",
+    apiKey: key,
     preferredModel: model || "openai/gpt-oss-120b",
   };
 }
@@ -91,7 +135,9 @@ export const askSymptomAI = createServerFn({ method: "POST" })
     const { apiKey: groqKey, preferredModel } = getGroqConfig();
 
     if (!groqKey || groqKey.includes("placeholder")) {
-      throw new Error("GROQ_API_KEY is missing or invalid in .env file.");
+      throw new Error(
+        "GROQ_API_KEY is not configured. If running locally, check your .env file. If deployed on Netlify, add GROQ_API_KEY in Netlify Site Configuration -> Environment Variables."
+      );
     }
 
     // Ensure preferred model is first, followed by alternates without duplicates
