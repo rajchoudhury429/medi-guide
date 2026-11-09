@@ -114,9 +114,9 @@ function ProfilePage() {
       full_name: profile.full_name ?? user?.user_metadata?.full_name ?? "",
       phone: profile.phone ?? "",
       age: profile.age?.toString() ?? "",
-      blood_group: profile.blood_group ?? profile.blood_type ?? "",
-      allergies: profile.allergies ?? profile.emergency_contact ?? "",
-      chronic_conditions: profile.chronic_conditions ?? profile.medical_history ?? "",
+      blood_group: (profile as any).blood_group ?? (profile as any).blood_type ?? "",
+      allergies: (profile as any).allergies ?? (profile as any).emergency_contact ?? "",
+      chronic_conditions: (profile as any).chronic_conditions ?? (profile as any).medical_history ?? "",
     }));
   }, [profile, user]);
 

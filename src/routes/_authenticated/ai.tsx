@@ -245,7 +245,7 @@ function SymptomChecker() {
     <div className="flex min-h-screen flex-col pb-6">
       <PageHeader
         title="AI symptom checker"
-        subtitle="Describe how you feel — powered by Groq Llama 3.3 70B AI engine."
+        subtitle="Describe how you feel — powered by Groq Ultra-Fast AI engine."
         action={
           <div className="flex items-center gap-1.5">
             {savedHistory && savedHistory.length > 0 ? (
@@ -273,7 +273,7 @@ function SymptomChecker() {
       <div className="px-5 mb-3 flex flex-wrap items-center justify-between gap-2">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
           <Cpu className="h-3.5 w-3.5" />
-          Groq Llama-3.3 70B Engine Active
+          Groq AI Ultra-Fast Engine Active
         </span>
 
         <div className="no-scrollbar flex gap-1.5 overflow-x-auto py-1">
@@ -397,7 +397,7 @@ function SymptomChecker() {
         {busy ? (
           <div className="flex items-center gap-2.5 rounded-2xl bg-card px-4 py-3.5 text-sm text-muted-foreground shadow-card border border-border/40">
             <Loader2 className="h-4 w-4 animate-spin text-primary" />
-            Groq Llama 3.3 AI analyzing your symptoms…
+            Groq AI analyzing your symptoms…
           </div>
         ) : null}
         <div ref={bottomRef} />

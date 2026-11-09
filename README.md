@@ -1,29 +1,76 @@
-# Welcome to your Lovable project
+# MediGuide AI 🩺
 
-This project was built with [Lovable](https://lovable.dev).
+MediGuide AI is a modern, responsive consumer health application featuring an AI-powered Symptom Checker, hospital/doctor finder, health record management, medication reminders, emergency SOS features, and authentication.
 
-## Build with Lovable
+Powered by **Groq Cloud AI inference** with resilient multi-model failover support.
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
+---
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+## ✨ Features
 
-## Development
+- **🤖 AI Symptom Checker**: Real-time health guidance powered by Groq high-speed AI inference (`openai/gpt-oss-120b`, `openai/gpt-oss-20b`, `qwen/qwen3.8-27b`) with automatic candidate failover.
+- **🏥 Nearby Hospital & Clinic Directory**: Interactive healthcare facility finder with distance calculation and filtering.
+- **👨‍⚕️ Doctor Consultations & Bookings**: Browse specialist profiles and book appointments.
+- **💊 Medication & Care Reminders**: Track dosages and set timely alerts.
+- **📁 Medical Health Records**: Manage and access health history.
+- **🚨 Emergency SOS**: Fast emergency service hotline dialers and emergency contact access.
+- **🔒 Authentication & Local Persistence**: Built-in auth with local file database fallback (`data/db.json`) and optional Supabase integration.
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+---
 
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
-```
+## 🛠️ Tech Stack
 
-## Built with
+- **Framework**: [TanStack Start](https://tanstack.com/start) / [TanStack Router](https://tanstack.com/router)
+- **Frontend**: [React 19](https://react.dev/), [Tailwind CSS v4](https://tailwindcss.com/), [Radix UI](https://www.radix-ui.com/), [Lucide Icons](https://lucide.dev/)
+- **Bundler / Server**: [Vite 8](https://vitejs.dev/) with [Nitro](https://nitro.unjs.io/)
+- **AI Inference**: [Groq Cloud API](https://console.groq.com/)
+- **Database & Auth**: Local JSON storage (`data/db.json`) & [Supabase](https://supabase.com/)
 
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 18+ installed
+- Groq Cloud API key ([console.groq.com](https://console.groq.com/keys))
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/rajchoudhury429/medi-guide.git
+   cd medi-guide
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Configure environment variables:
+   Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+   Add your Groq API key:
+   ```env
+   GROQ_API_KEY=your_groq_api_key_here
+   GROQ_MODEL=openai/gpt-oss-120b
+   ```
+
+4. Start development server:
+   ```bash
+   npm run dev
+   ```
+
+5. Build for production:
+   ```bash
+   npm run build
+   ```
+
+---
+
+## 📄 License
+
+MIT

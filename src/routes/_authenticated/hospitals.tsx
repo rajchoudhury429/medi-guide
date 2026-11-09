@@ -265,7 +265,7 @@ function HospitalsPage() {
         const matchSearch =
           !term ||
           facility.name.toLowerCase().includes(term) ||
-          facility.address.toLowerCase().includes(term) ||
+          (facility.address ?? "").toLowerCase().includes(term) ||
           (facility.city ?? "").toLowerCase().includes(term);
         return matchKind && matchSearch;
       })
